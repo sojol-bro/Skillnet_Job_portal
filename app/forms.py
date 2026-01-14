@@ -1,6 +1,7 @@
 from django import forms
 from .models import Job
 from .models import Quiz
+from .models import Payment
 
 BASE_INPUT_CLASS = 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300'
 BASE_TEXTAREA_CLASS = 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300'
@@ -37,3 +38,18 @@ class JobQuizForm(forms.Form):
         required=False,
         help_text='Optional: Select a quiz candidates must take before applying.'
     )
+
+
+
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['email', 'name', 'address', 'phone', 'trx_id']
+        widgets = {
+            'email': forms.EmailInput(attrs={'placeholder': 'Your @gmail.com', 'required': True}),
+            'name': forms.TextInput(attrs={'placeholder': 'Your full name', 'required': True}),
+            'address': forms.TextInput(attrs={'placeholder': 'Street address'}),
+            'phone': forms.TextInput(attrs={'placeholder': '+880 1XXX-XXXXXX'}),
+            'trx_id': forms.TextInput(attrs={'placeholder': 'Transaction ID (if applicable)'}),
+        }

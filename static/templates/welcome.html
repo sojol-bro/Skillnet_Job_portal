@@ -116,9 +116,18 @@
         <!-- Course Card -->
         <div class="bg-blue-200 p-6 rounded-xl shadow-md relative hover:shadow-lg transition-shadow">
           <div class="absolute top-4 right-4 text-xs bg-white text-gray-700 px-2 py-1 rounded-full">{{ course.get_difficulty_display }}</div>
-          <div class="flex items-center mb-4">
-            <img src="https://via.placeholder.com/60x60?text={{ course.title|slice:':1' }}" alt="{{ course.title }}" class="mr-4 rounded-lg" />
-            <div>
+         <div class="flex items-center mb-4">
+    {% if course.thumbnail %}
+        <img src="{{ course.thumbnail.url }}"
+             alt="{{ course.title }}"
+             class="mr-4 rounded-lg w-15 h-15 object-cover" />
+    {% else %}
+        <img src="https://via.placeholder.com/60x60?text={{ course.title|slice:':1' }}"
+             alt="{{ course.title }}"
+             class="mr-4 rounded-lg w-15 h-15 object-cover" />
+    {% endif %}
+
+    <div>
               <h3 class="font-bold text-lg">{{ course.title }}</h3>
               <p class="text-sm text-gray-800">{{ course.category.name }}</p>
             </div>

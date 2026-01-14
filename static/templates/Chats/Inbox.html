@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Support Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-area {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        
+        .message-bubble {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes blink {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+        
+        .quick-reply-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .quick-reply-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .image-preview:hover {
+            transform: scale(1.05);
+        }
+        
+        .image-modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .status-online {
+            background-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <img src="https://ui-avatars.com/api/?name=Alex+Smith&background=3b82f6&color=fff&size=48" 
+                         alt="Agent" class="w-12 h-12 rounded-full">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">Support Agent Alex</h2>
+                    <p class="text-sm text-gray-500 flex items-center">
+                        <span class="status-dot status-online"></span>
+                        <span id="agentStatus">Online</span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="Knowledge Base">
+                    <i class="fas fa-book text-gray-600"></i>
+                </button>
+                <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="View Profile">
+                    <i class="fas fa-user text-gray-600"></i>
+                </button>
+                <button id="endChatBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">
+                    <i class="fas fa-times-circle mr-2"></i>End Chat
+                </button>
+            </div>
+        </div>
+
+        <!-- Message Area -->
+        <div id="messageArea" class="message-area bg-gray-50 px-6 py-4">
+            <!-- System Message: Chat Started -->
+            <div class="flex justify-center my-4">
+                <div class="bg-gray-200 text-gray-600 text-sm px-4 py-2 rounded-full">
+                    <i class="fas fa-circle-check mr-2"></i>Agent Alex joined the chat
+                </div>
+            </div>
+
+            <!-- Sample Messages -->
+            <div class="message-bubble mb-4 flex justify-end">
+                <div class="max-w-md">
+                    <div class="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm">
+                        <p class="text-sm">Hi, I'm having trouble accessing my account. Can you help?</p>
+                    </div>
+                    <div class="flex justify-end items-center mt-1 text-xs text-gray-500">
+                        <span>You</span>
+                        <span class="mx-2">•</span>
+                        <span>10:32 AM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message-bubble mb-4 flex">
+                <div class="max-w-md">
+                    <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
+                        <p class="text-sm text-gray-800">Hello! I'd be happy to help you with your account access. Can you tell me what error message you're seeing?</p>
+                    </div>
+                    <div class="flex items-center mt-1 text-xs text-gray-500">
+                        <span>Alex</span>
+                        <span class="mx-2">•</span>
+                        <span>10:33 AM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message-bubble mb-4 flex justify-end">
+                <div class="max-w-md">
+                    <div class="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm">
+                        <p class="text-sm mb-2">Here's a screenshot of the error:</p>
+                        <img src="https://via.placeholder.com/300x200/e5e7eb/6b7280?text=Error+Screenshot" 
+                             alt="Error screenshot" 
+                             class="image-preview rounded-lg mt-2"
+                             onclick="openImageModal(this.src)">
+                    </div>
+                    <div class="flex justify-end items-center mt-1 text-xs text-gray-500">
+                        <span>You</span>
+                        <span class="mx-2">•</span>
+                        <span>10:34 AM</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="mb-4 flex" style="display: none;">
+                <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
+                    <div class="typing-indicator flex space-x-1">
+                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Attachment Preview -->
+        <div id="attachmentPreview" class="px-6 py-3 bg-white border-t border-gray-200" style="display: none;">
+            <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                <div class="flex items-center space-x-3">
+                    <img id="previewImage" src="" alt="Preview" class="w-16 h-16 object-cover rounded">
+                    <div>
+                        <p id="previewFileName" class="text-sm font-medium text-gray-700"></p>
+                        <p id="previewFileSize" class="text-xs text-gray-500"></p>
+                    </div>
+                </div>
+                <button onclick="clearAttachment()" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="bg-white border-t border-gray-200 px-6 py-4 shadow-lg">
+            <div class="flex items-end space-x-3">
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                <button onclick="document.getElementById('fileInput').click()" 
+                        class="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                    <i class="fas fa-paperclip text-xl"></i>
+                </button>
+                <div class="flex-1 relative">
+                    <textarea 
+                        id="messageInput" 
+                        rows="1" 
+                        placeholder="Type your message..."
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onkeydown="handleKeyPress(event)"
+                    ></textarea>
+                </div>
+                <button 
+                    id="sendBtn"
+                    onclick="sendMessage()" 
+                    class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium shadow-sm">
+                    <i class="fas fa-paper-plane mr-2"></i>Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- End Chat Modal -->
+    <div id="endChatModal" class="modal fixed inset-0 items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
+            <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 text-center mb-2">End Chat Session?</h3>
+            <p class="text-gray-600 text-center mb-6">Are you sure you want to end this chat? This action cannot be undone.</p>
+            <div class="flex space-x-3">
+                <button onclick="closeEndChatModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                    Cancel
+                </button>
+                <button onclick="confirmEndChat()" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">
+                    End Chat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal fixed inset-0 items-center justify-center z-50" onclick="closeImageModal()">
+        <div class="p-4">
+            <img id="modalImage" src="" alt="Full size" class="image-modal-content rounded-lg shadow-2xl">
+        </div>
+    </div>
+
+    <script>
+/* =============================
+   GLOBAL STATE
+============================= */
+const roomId = "{{ room_id }}";
+const currentUserType = "{{ user_type }}"; // user | employee
+let socket = null;
+let attachedFile = null;
+
+/* =============================
+   WEBSOCKET CONNECTION
+============================= */
+socket = new WebSocket(
+    "ws://" + window.location.host + "/ws/chat/" + roomId + "/"
+);
+
+socket.onopen = () => {
+    console.log("WebSocket connected");
+};
+
+socket.onclose = () => {
+    console.log("WebSocket disconnected");
+};
+
+socket.onerror = error => {
+    console.error("WebSocket error:", error);
+};
+
+/* =============================
+   RECEIVE MESSAGE
+============================= */
+socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    if (data.type === "typing") {
+        toggleTyping(data.sender, data.status);
+        return;
+    }
+
+    appendMessage(
+        data.message,
+        data.sender,
+        data.timestamp
+    );
+};
+
+/* =============================
+   SEND MESSAGE
+============================= */
+function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const message = input.value.trim();
+
+    if (!message && !attachedFile) return;
+
+    socket.send(JSON.stringify({
+        message: message,
+        sender: currentUserType
+    }));
+
+    input.value = "";
+    input.style.height = "auto";
+    clearAttachment();
+}
+
+/* =============================
+   APPEND MESSAGE
+============================= */
+function appendMessage(text, sender, time) {
+    const messageArea = document.getElementById("messageArea");
+    const isMe = sender === currentUserType;
+
+    const html = `
+        <div class="message-bubble mb-4 flex ${isMe ? "justify-end" : ""}">
+            <div class="max-w-md">
+                <div class="${isMe ? "bg-blue-500 text-white rounded-tr-sm" : "bg-white border rounded-tl-sm"} 
+                            rounded-2xl px-4 py-3 shadow-sm">
+                    <p class="text-sm">${escapeHtml(text)}</p>
+                </div>
+                <div class="flex ${isMe ? "justify-end" : ""} mt-1 text-xs text-gray-500">
+                    <span>${isMe ? "You" : "Agent"}</span>
+                    <span class="mx-2">•</span>
+                    <span>${time}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    messageArea.insertAdjacentHTML("beforeend", html);
+    scrollToBottom();
+}
+
+/* =============================
+   TYPING INDICATOR
+============================= */
+let typingTimeout = null;
+const messageInput = document.getElementById("messageInput");
+
+messageInput.addEventListener("input", () => {
+    socket.send(JSON.stringify({
+        type: "typing",
+        status: true,
+        sender: currentUserType
+    }));
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        socket.send(JSON.stringify({
+            type: "typing",
+            status: false,
+            sender: currentUserType
+        }));
+    }, 1000);
+});
+
+function toggleTyping(sender, status) {
+    if (sender === currentUserType) return;
+
+    const indicator = document.getElementById("typingIndicator");
+    const agentStatus = document.getElementById("agentStatus");
+
+    indicator.style.display = status ? "flex" : "none";
+    agentStatus.textContent = status ? "Typing..." : "Online";
+}
+
+/* =============================
+   UTILS
+============================= */
+function scrollToBottom() {
+    const messageArea = document.getElementById("messageArea");
+    messageArea.scrollTop = messageArea.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/* =============================
+   ATTACHMENT PLACEHOLDERS
+============================= */
+function clearAttachment() {
+    attachedFile = null;
+    document.getElementById("fileInput").value = "";
+    document.getElementById("attachmentPreview").style.display = "none";
+}
+
+/* =============================
+   AUTO SCROLL ON LOAD
+============================= */
+scrollToBottom();
+</script>
+
+</body>
+</html>

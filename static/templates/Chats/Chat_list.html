@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Inbox - SkillNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Smooth animations */
+        .chat-item {
+            transition: all 0.2s ease;
+        }
+        .chat-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(4px);
+        }
+        .chat-item.active {
+            background-color: #eef2ff;
+            border-left: 4px solid #6366f1;
+        }
+
+        /* Online indicator pulse */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        .online-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Mobile menu animation */
+        .mobile-menu-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+    
+    <!-- Main Container -->
+    <div class="flex h-screen">
+        
+        <!-- ============================================
+             SIDEBAR - Navigation Rail (Left)
+             Hidden on mobile, shown on md and up
+             ============================================ -->
+        <aside class="hidden md:flex flex-col items-center w-20 bg-white border-r border-gray-200 py-6">
+            <!-- Logo -->
+            <div class="mb-8">
+                <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                    S
+                </div>
+            </div>
+            
+            <!-- Navigation Icons -->
+            <nav class="flex-1 flex flex-col items-center space-y-6">
+                <!-- All Chats -->
+                <button class="nav-icon active p-3 rounded-xl hover:bg-gray-100 transition relative group" 
+                        title="All Chats">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                        All Chats
+                    </span>
+                </button>
+                
+                <!-- Contacts -->
+                <button class="nav-icon p-3 rounded-xl hover:bg-gray-100 transition relative group" 
+                        title="Contacts">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                        Contacts
+                    </span>
+                </button>
+                
+                <!-- Settings -->
+                <button class="nav-icon p-3 rounded-xl hover:bg-gray-100 transition relative group" 
+                        title="Settings">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                        Settings
+                    </span>
+                </button>
+            </nav>
+            
+            <!-- User Profile Avatar -->
+            <div class="mt-auto">
+                <button class="relative">
+                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff&size=40" 
+                         alt="Profile" 
+                         class="w-10 h-10 rounded-full ring-2 ring-indigo-600 ring-offset-2">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============================================
+             CONVERSATION LIST (Middle)
+             ============================================ -->
+        <div class="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col">
+            
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200">
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden mb-4 p-2 hover:bg-gray-100 rounded-lg" onclick="toggleMobileMenu()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                
+                <h1 class="text-2xl font-bold text-gray-900 mb-4">Messages</h1>
+                
+                <!-- Search Bar -->
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" 
+                           id="searchInput"
+                           placeholder="Search conversations..." 
+                           class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                           oninput="searchChats(this.value)">
+                </div>
+            </div>
+            
+            <!-- Filter Tabs -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex space-x-2">
+                    <button class="filter-tab active px-4 py-2 rounded-lg text-sm font-medium transition" 
+                            onclick="filterChats('all')">
+                        All
+                    </button>
+                    <button class="filter-tab px-4 py-2 rounded-lg text-sm font-medium transition" 
+                            onclick="filterChats('unread')">
+                        Unread
+                    </button>
+                    <button class="filter-tab px-4 py-2 rounded-lg text-sm font-medium transition" 
+                            onclick="filterChats('groups')">
+                        Groups
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat List -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar" id="chatList">
+                <!-- Chat items will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- ============================================
+             MAIN CHAT AREA (Right)
+             Hidden on mobile when sidebar is shown
+             ============================================ -->
+        <div class="flex-1 bg-gray-50 flex items-center justify-center" id="emptyChatArea">
+            <div class="text-center px-8">
+                <!-- Illustration -->
+                <div class="mb-8">
+                    <svg class="w-64 h-64 mx-auto text-indigo-100" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                        <circle cx="8" cy="10" r="1.5"/>
+                        <circle cx="12" cy="10" r="1.5"/>
+                        <circle cx="16" cy="10" r="1.5"/>
+                    </svg>
+                </div>
+                
+                <!-- Message -->
+                <h2 class="text-2xl font-semibold text-gray-900 mb-2">Select a message to start chatting</h2>
+                <p class="text-gray-500">Choose a conversation from the list to view messages</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         JAVASCRIPT - Functionality
+         ============================================ -->
+   <script>
+    /* ================================
+       GLOBAL STATE
+    ================================= */
+    let chats = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let socket = null;
+
+    /* ================================
+       FETCH CHAT LIST FROM DJANGO
+    ================================= */
+    async function loadChats() {
+        try {
+            const response = await fetch('/api/chat-list/');
+            chats = await response.json();
+            renderChats();
+        } catch (error) {
+            console.error('Failed to load chats:', error);
+        }
+    }
+
+    /* ================================
+       RENDER CHAT LIST
+    ================================= */
+    function renderChats() {
+        const chatList = document.getElementById('chatList');
+        let filteredChats = chats;
+
+        if (currentFilter === 'unread') {
+            filteredChats = filteredChats.filter(chat => chat.unread > 0);
+        } else if (currentFilter === 'groups') {
+            filteredChats = filteredChats.filter(chat => chat.type === 'group');
+        }
+
+        if (searchQuery) {
+            filteredChats = filteredChats.filter(chat =>
+                chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        if (filteredChats.length === 0) {
+            chatList.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-center px-8 py-12">
+                    <p class="text-gray-500">No conversations found</p>
+                </div>
+            `;
+            return;
+        }
+
+        chatList.innerHTML = filteredChats.map(chat => `
+            <div class="chat-item px-6 py-4 cursor-pointer border-b border-gray-100"
+                 onclick="selectChat(${chat.id})"
+                 data-chat-id="${chat.id}">
+                <div class="flex items-start space-x-3">
+                    <div class="relative flex-shrink-0">
+                        <img src="${chat.avatar || 'https://ui-avatars.com/api/?name=' + chat.name}"
+                             class="w-12 h-12 rounded-full">
+                        ${chat.online ? `
+                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white online-pulse"></span>
+                        ` : ''}
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="text-sm font-semibold text-gray-900 truncate">${chat.name}</h3>
+                            <span class="text-xs text-gray-500">${chat.timestamp || ''}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-gray-600 truncate">${chat.lastMessage || ''}</p>
+                            ${chat.unread > 0 ? `
+                                <span class="ml-2 w-5 h-5 text-xs font-bold text-white bg-indigo-600 rounded-full flex items-center justify-center">
+                                    ${chat.unread}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /* ================================
+       SELECT CHAT → WEBSOCKET CONNECT
+    ================================= */
+    function selectChat(chatId) {
+        document.querySelectorAll('.chat-item').forEach(item =>
+            item.classList.remove('active')
+        );
+
+        document.querySelector(`[data-chat-id="${chatId}"]`)
+            ?.classList.add('active');
+
+        if (socket) socket.close();
+
+        socket = new WebSocket(
+            `ws://${window.location.host}/ws/chat/${chatId}/`
+        );
+
+        socket.onopen = () => {
+            console.log('WebSocket connected:', chatId);
+        };
+
+        socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            console.log('New message:', data);
+            // later → render message in chat window
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket disconnected');
+        };
+    }
+
+    /* ================================
+       FILTER & SEARCH
+    ================================= */
+    function filterChats(filter) {
+        currentFilter = filter;
+
+        document.querySelectorAll('.filter-tab')
+            .forEach(tab => tab.classList.remove('active'));
+
+        event.target.classList.add('active');
+        renderChats();
+    }
+
+    function searchChats(query) {
+        searchQuery = query;
+        renderChats();
+    }
+
+    function toggleMobileMenu() {
+        alert('Mobile menu can be implemented later');
+    }
+
+    /* ================================
+       INIT
+    ================================= */
+    loadChats();
+
+    document.styleSheets[0].insertRule(`
+        .filter-tab { color: #6b7280; }
+    `, 0);
+
+    document.styleSheets[0].insertRule(`
+        .filter-tab.active { background-color: #6366f1; color: white; }
+    `, 0);
+</script>
+
+</body>
+</html>
