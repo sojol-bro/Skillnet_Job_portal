@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-hil_tu4f!d-+zuk_10o5kfic_*c&qp2b4pn9k3#@sicps-y2q#'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-hil_tu4f!d-+zuk_10o5kfic_*c&qp2b4pn9k3#@sicps-y2q#')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.vercel.app').split(',')
 
 
 # Application definition
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'app',
     'accounts',
     'chat',
+    'axes',
    
    
 ]
@@ -63,15 +65,24 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # 👈 FIRST
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files in production
+    # Custom security headers & CSP
+    'job.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'job.urls'
@@ -81,8 +92,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / "static/templates/",
-            BASE_DIR / "theme/templates/"
-            ],
+            BASE_DIR / "theme/templates/",
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,6 +128,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -124,8 +138,26 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'job.validators.StrongPasswordValidator',
+    },
 ]
 
+
+# Lock account after 4 failed attempts
+AXES_FAILURE_LIMIT = 4
+
+# Lock duration: 30 minutes (0.5 hours)
+AXES_COOLOFF_TIME = 0.5
+
+# Lock by username
+AXES_LOCKOUT_PARAMETERS = ["username"]
+
+# Reset counter after successful login
+AXES_RESET_ON_SUCCESS = True
+
+# Custom message
+AXES_LOCKOUT_MESSAGE = "Too many failed login attempts. Please try again after 30 minutes."
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -151,6 +183,32 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"
+
+# ---------------------------------------------------------------------------
+# Additional security hardening
+# ---------------------------------------------------------------------------
+
+# Clickjacking / framing protection (middleware already enabled)
+X_FRAME_OPTIONS = 'DENY'
+
+# Modern browser security headers
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# Cookie protection
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+# Only enforce strict HTTPS-related settings in non-debug (production) mode.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
